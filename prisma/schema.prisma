@@ -34,51 +34,48 @@ enum PropertyStatus {
 
 model User {
   id Int @id @default(autoincrement())
-  Role Role @default(CUSTOMER)
+  role Role @default(CUSTOMER)
   userName String 
-  email String  @db.VarChar(191)
+  email String  @db.VarChar(191) @unique()
   password String @db.VarChar(191)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  properties Property[] @relation("UserProperties")
-
+  properties Property[] 
 
   @@map("users")
 }
 
 model Property {
   id Int @id @default(autoincrement())
-  ownerId Int
+  userId Int
   title String
   description String?
+  location String
   price Float
   type PropertyType
   status PropertyStatus @default(AVAILABLE)
-  address String
-  latitude Float?
-  longitude Float?
   bedrooms Int?
   bathrooms Int?
   area Float? // in square feet or square meters
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner User @relation("UserProperties",fields: [ownerId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
-  images PropertyImage[]
+  // images PropertyImage[]
 
   @@map("properties")
 }
 
-model PropertyImage {
-  id         Int   @id @default(autoincrement())
-  imageUrl    String
-  propertyId Int
-  publicId String? // Optional field for storing the public ID of the image in cloud storage
-  property   Property @relation(fields: [propertyId], references: [id])
+// model PropertyImage {
+//   id         Int   @id @default(autoincrement())
+//   imageUrl    String
+//   propertyId Int
+//   publicId String? // Optional field for storing the public ID of the image in cloud storage
+//   property   Property @relation(fields: [propertyId], references: [id])
 
-  createdAt  DateTime @default(now())
+//   createdAt  DateTime @default(now())
 
-  @@map("property_images")
-}
+//   @@map("property_images")
+// }

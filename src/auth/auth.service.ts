@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
 import { hash, compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -11,56 +11,68 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
-  async Register(registerDto: RegisterDto) {
-    const emailExist = await this.prismaService.user.findFirst({
-      where: {
-        email: registerDto.email,
-      },
+
+  async register(registerDto: RegisterDto) {
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email: registerDto.email },
     });
-    if (emailExist) {
-      throw new BadRequestException(
-        `user with ${registerDto.email} already exists`,
-      );
+    if (existingUser) {
+      throw new BadRequestException('user already exist');
     }
     registerDto.password = await hash(registerDto.password, 10);
+
     const user = await this.prismaService.user.create({
       data: registerDto,
     });
-
-    return {message: 'User created successfully', user};
-
-    // const token = await this.jwtService.signAsync({
-    //   where: {
-    //     user_id: user.id,
-    //   },
-    // });
-    // // console.log({ token });
-    // return { token };
+    const token = await this.jwtService.signAsync({
+      user: {
+        id: user.id,
+        name: user.userName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+    return {
+      token,
+      user: {
+        id: user.id,
+        name: user.userName,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
-  async Login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto) {
     const user = await this.prismaService.user.findFirst({
       where: {
         email: loginDto.userName,
       },
     });
-
     if (!user) {
-      throw new BadRequestException(`User with ${loginDto.userName} not found`);
+      throw new BadRequestException('user not found');
     }
 
     if (!(await compare(loginDto.password, user.password))) {
-      throw new BadRequestException('Invalid credentials');
+      throw new BadRequestException('Invalid Credentials');
     }
 
-    return {message: 'User logged in successfully', user};
-
-    //     const token = await this.jwtService.signAsync({
-    //       where: {
-    //         user_id: user.id,
-    //       },
-    //     });
-    //     return { token };
-    //   }
+    const token = await this.jwtService.signAsync({
+      user: {
+        id: user.id,
+        name: user.userName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+    return {
+      token,
+      user: {
+        id: user.id,
+        name: user.userName,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 }

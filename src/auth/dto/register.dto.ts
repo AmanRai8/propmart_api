@@ -1,19 +1,27 @@
-import { Role } from "generated/prisma";
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from "class-validator";
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { Role } from 'generated/prisma';
+
 export class RegisterDto {
-    @IsEnum(Role)
-    Role: Role;
-    
-    @IsString()
-    @IsNotEmpty()
-    userName: string;
+  @IsEnum(Role)
+  role: Role;
 
-    @IsString()
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsString()
+  @IsNotEmpty()
+  userName: string;
 
-    @IsString()
-    @IsNotEmpty()
-    password: string;
+  @IsEmail()
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
 }

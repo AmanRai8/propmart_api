@@ -1,21 +1,23 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from 'generated/prisma/runtime/library';
 import { RegisterDto } from './dto/register.dto';
+import { Public } from 'src/helper/public';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // @Public()
+
+  @Public()
   @Post('register')
-  register(@Body() registerDto: RegisterDto) {
-    return this.authService.Register(registerDto);
+  register(@Body() body: RegisterDto) {
+    return this.authService.register(body);
   }
 
+  @Public()
   @Post('login')
-  Login(@Body() loginDto: LoginDto) {
-    return this.authService.Login(loginDto);
+  login(@Body() body: LoginDto) {
+    return this.authService.login(body);
   }
 }
