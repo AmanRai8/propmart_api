@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
 } from 'class-validator';
 import { PropertyStatus, PropertyType } from 'generated/prisma';
@@ -26,6 +27,7 @@ export class CreatePropertyDto {
 
   @IsNumber()
   @IsNotEmpty()
+  @IsPositive()
   price: number;
 
   @IsEnum(PropertyType)
@@ -36,13 +38,16 @@ export class CreatePropertyDto {
 
   @IsNumber()
   @IsOptional()
+  @IsPositive()
   bedrooms?: number;
 
   @IsNumber()
   @IsOptional()
+  @IsPositive()
   bathrooms?: number;
 
   @IsNumber()
   @IsOptional()
+  @IsPositive()
   area?: number; // in square feet or square meters
 }

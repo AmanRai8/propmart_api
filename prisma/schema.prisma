@@ -63,19 +63,19 @@ model Property {
 
   user User @relation(fields: [userId], references: [id])
 
-  // images PropertyImage[]
+  images PropertyImage[]
 
   @@map("properties")
 }
 
-// model PropertyImage {
-//   id         Int   @id @default(autoincrement())
-//   imageUrl    String
-//   propertyId Int
-//   publicId String? // Optional field for storing the public ID of the image in cloud storage
-//   property   Property @relation(fields: [propertyId], references: [id])
+model PropertyImage {
+  id         Int   @id @default(autoincrement())
+  imageUrl    String
+  propertyId Int
+   // Optional field for storing the public ID of the image in cloud storage
+  property   Property @relation(fields: [propertyId], references: [id])
 
-//   createdAt  DateTime @default(now())
+  createdAt  DateTime @default(now())
 
-//   @@map("property_images")
-// }
+  @@map("property_images")
+}

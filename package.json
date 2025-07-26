@@ -25,7 +25,6 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "^2.1.0",
-    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^6.11.1",
     "@types/multer": "^1.4.13",
@@ -35,8 +34,6 @@
     "cloudinary": "^1.41.3",
     "multer": "^2.0.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

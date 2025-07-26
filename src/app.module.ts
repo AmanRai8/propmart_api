@@ -7,6 +7,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PropertyModule } from './property/property.module';
+import { PropertyImageModule } from './property-image/property-image.module';
+import { CloudinaryService } from './cloudinary/cloudinary.service';
 
 @Module({
   imports: [
@@ -15,8 +17,9 @@ import { PropertyModule } from './property/property.module';
     UsersModule,
     AuthModule,
     PropertyModule,
+    PropertyImageModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, CloudinaryService],
 })
 export class AppModule {}
