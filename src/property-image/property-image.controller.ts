@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Delete,
+  Get,
   Param,
   Post,
   UploadedFile,
@@ -23,8 +25,18 @@ export class PropertyImageController {
     @Body() body: { propertyId: string },
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const upload = await this.cloudinaryService.uploadImage(file);
+    // const upload = await this.cloudinaryService.uploadImage(file);
 
-    return this.propertyImageService.create(body.propertyId, upload.secure_url);
+    return this.propertyImageService.create(body.propertyId, file);
+  }
+
+  @Get()
+  async getALl() {
+    return this.propertyImageService.getAll();
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return this.propertyImageService.remove(+id);
   }
 }

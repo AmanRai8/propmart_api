@@ -25,7 +25,7 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Get('me')
+  @Get()
   findAll() {
     return this.usersService.findAll();
   }

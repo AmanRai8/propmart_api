@@ -72,6 +72,7 @@ model PropertyImage {
   id         Int   @id @default(autoincrement())
   imageUrl    String
   propertyId Int
+  publicId String
    // Optional field for storing the public ID of the image in cloud storage
   property   Property @relation(fields: [propertyId], references: [id])
 

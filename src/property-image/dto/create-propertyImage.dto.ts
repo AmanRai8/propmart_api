@@ -1,12 +1,14 @@
-import { IsNotEmpty, IsNumber, IsPositive, IsUrl } from "class-validator";
+import { IsNotEmpty, IsNumber, IsPositive, IsUrl } from 'class-validator';
 
 export class PropertyImageDto {
-    @IsUrl()
-    @IsNotEmpty()
-    imageUrl: string;
+  @IsUrl()
+  @IsNotEmpty()
+  imageUrl: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    @IsPositive()
-    propertyId: number;   
+  @IsNumber()
+  @IsNotEmpty()
+  @IsPositive()
+  propertyId: number;
+
+  publicId: string;
 }
