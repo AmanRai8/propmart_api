@@ -34,12 +34,12 @@ export class AuthService {
     });
     return {
       token,
-      // user: {
-      //   id: user.id,
-      //   name: user.userName,
-      //   email: user.email,
-      //   role: user.role,
-      // },
+      user: {
+        id: user.id,
+        name: user.userName,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 
@@ -67,12 +67,12 @@ export class AuthService {
     });
     return {
       token,
-      // user: {
-      //   id: user.id,
-      //   name: user.userName,
-      //   email: user.email,
-      //   role: user.role,
-      // },
+      user: {
+        id: user.id,
+        name: user.userName,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 }
