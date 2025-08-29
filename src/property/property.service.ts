@@ -9,24 +9,47 @@ import { PaginationQueryDto } from 'src/Pagination/pagination.dto';
 export class PropertyService {
   constructor(private readonly prismaService: PrismaService) {}
   async create(createPropertyDto: CreatePropertyDto) {
-    const existing = await this.prismaService.property.findFirst({
-      where: {
-        title: createPropertyDto.title,
-        userId: createPropertyDto.userId,
-      },
-    });
-    if (existing) {
-      throw new BadRequestException('Duplicate property title ');
-    }
+
     return this.prismaService.property.create({
-      data: createPropertyDto,
-    });
+      data: createPropertyDto
+    })
+    // const { latitude, longitude, ...rest } = createPropertyDto;
+
+    // if (latitude === undefined || longitude === undefined) {
+    //   throw new BadRequestException('Latitude and Longitude are required');
+    // }
+
+    // const result = await this.prismaService.$queryRawUnsafe<Array<any>>(
+    //   `INSERT INTO "properties" ("title", "description", "price", "status", "type", "userId", "latitude", "longitude", "location", "createdAt", "updatedAt")
+    // VALUES ($1, $2, $3, $4::"PropertyStatus", $5::"PropertyType", $6, $7, $8,  ST_SetSRID(ST_MakePoint($8, $7), 4326))
+    // RETURNING *`,
+    //   rest.title,
+    //   rest.description || '',
+    //   rest.price,
+    //   rest.status || 'AVAILABLE',
+    //   rest.type || 'HOUSE',
+    //   rest.userId,
+    //   latitude,
+    //   longitude,
+    //   //
+    // );
+
+    // return result;
   }
 
-  async findAll(paginationQuery: PaginationQueryDto) {
+  async findAll(
+    paginationQuery: PaginationQueryDto & {
+      lat?: number;
+      lng?: number;
+      radiusKm?: number;
+    },
+  ) {
     const {
       page = 1,
       limit = 10,
+      lat,
+      lng,
+      radiusKm,
       search,
       type,
       status,
@@ -67,43 +90,72 @@ export class PropertyService {
     const take = limit;
     const skip = (page - 1) * take;
 
-    const where: any = {};
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { location: { contains: search, mode: 'insensitive' } },
-      ];
+    // if no lat/lng provided -> fallback to normal prisma query
+    if (!lat || !lng || !radiusKm) {
+      const where: any = {};
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+      if (type) where.type = type;
+      if (status) where.status = status;
+      if (minPrice || maxPrice) {
+        where.price = {};
+        if (minPrice) where.price.gte = minPrice;
+        if (maxPrice) where.price.lte = maxPrice;
+      }
+
+      const [properties, total] = await Promise.all([
+        this.prismaService.property.findMany({
+          skip,
+          take,
+          where,
+          include: { images: true },
+        }),
+        this.prismaService.property.count({ where }),
+      ]);
+
+      return {
+        totalProperties: total,
+        currentPage: page,
+        limit: take,
+        data: properties,
+      };
     }
 
-    if (type) {
-      where.type = type;
-    }
+    // with lat/;ng -> run PostGIS haversine query
+    const properties = await this.prismaService.$queryRawUnsafe<any>(
+      `SELECT p.*,
+    ST_DistanceSphere(
+    p.location,
+    ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)
+    ) AS distance_m
+     FROM "Property" p
+     WHERE ST_DWithin(
+     p.location::geography,
+     ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+     ${radiusKm * 1000}
+     )
+     ORDER BY distance_m
+     LIMIT ${take} OFFSET ${skip};`,
+    );
 
-    if (status) {
-      where.status = status;
-    }
-
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) where.price.gte = minPrice;
-      if (maxPrice) where.price.lte = maxPrice;
-    }
-
-    const [properties, total] = await Promise.all([
-      this.prismaService.property.findMany({
-        skip,
-        take,
-        where,
-        include: {
-          images: true, // Include related property images
-        },
-      }),
-      this.prismaService.property.count({ where }),
-    ]);
+    // count matching
+    const [{ count }] = await this.prismaService.$queryRawUnsafe<
+      { count: number }[]
+    >(
+      `SELECT COUNT(*)::int
+      FROM "Property" p
+      WHERE ST_DWithin(
+      p.location::geography,
+      ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+      ${radiusKm * 1000})`,
+    );
 
     return {
-      totalProperties: total,
+      totalProperties: count,
       currentPage: page,
       limit: take,
       data: properties,

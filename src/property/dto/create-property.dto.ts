@@ -9,10 +9,6 @@ import {
 import { PropertyStatus, PropertyType } from 'generated/prisma';
 
 export class CreatePropertyDto {
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number;
-
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -21,20 +17,16 @@ export class CreatePropertyDto {
   @IsOptional()
   description?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  location: string;
-
   @IsNumber()
   @IsNotEmpty()
   @IsPositive()
   price: number;
 
-  @IsEnum(PropertyType)
-  type: PropertyType;
-
   @IsEnum(PropertyStatus)
   status: PropertyStatus;
+
+  @IsEnum(PropertyType)
+  type: PropertyType;
 
   @IsNumber()
   @IsOptional()
@@ -50,4 +42,20 @@ export class CreatePropertyDto {
   @IsOptional()
   @IsPositive()
   area?: number; // in square feet or square meters
+
+  @IsNumber()
+  @IsNotEmpty()
+  userId: number;
+
+  @IsString()
+  @IsOptional()
+  location?: string;
+
+  @IsNumber()
+  @IsPositive()
+  latitude: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  longitude: number;
 }
