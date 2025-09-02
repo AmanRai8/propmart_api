@@ -9,24 +9,27 @@ import {
   UseGuards,
   Req,
   Query,
+  UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { ownerGuard } from 'src/guard/Owner/owner.guard';
 import { PaginationQueryDto } from 'src/Pagination/pagination.dto';
-// import { AdminGuard } from 'src/guard/Admin/admin.guard';
-// import { jwtPayload } from 'src/types/jwt';
+import { AuthGuard } from 'src/guard/auth/auth.guard';
+// import { Request } from 'express';
 
-// @UseGuards(AdminGuard,OwnerGuard)
 @Controller('property')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
-  @UseGuards(ownerGuard)
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createPropertyDto: CreatePropertyDto) {
-    return this.propertyService.create(createPropertyDto);
+  create(@Body() createPropertyDto: CreatePropertyDto, @Req() req: any) {
+    const userId = req.payload?.user.id; //assume jwt middlware setsreq.user
+    if (!userId) throw new BadRequestException('Invalid user token');
+    return this.propertyService.create(createPropertyDto, userId);
   }
 
   @Get()

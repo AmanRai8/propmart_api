@@ -43,19 +43,7 @@ export class CreatePropertyDto {
   @IsPositive()
   area?: number; // in square feet or square meters
 
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number;
-
   @IsString()
-  @IsOptional()
-  location?: string;
+  location: string;
 
-  @IsNumber()
-  @IsPositive()
-  latitude: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  longitude: number;
 }

@@ -3,38 +3,89 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationQueryDto } from 'src/Pagination/pagination.dto';
+import axios from 'axios';
+import { PropertyType } from 'generated/prisma';
 // import { jwtPayload } from 'src/types/jwt';
+
+interface GeoData {
+  lat: string;
+  lng: string;
+  display_name: string;
+  length: number;
+}
 
 @Injectable()
 export class PropertyService {
   constructor(private readonly prismaService: PrismaService) {}
-  async create(createPropertyDto: CreatePropertyDto) {
+  async create(createPropertyDto: CreatePropertyDto, userId: number) {
+    const {
+      title,
+      description,
+      price,
+      type,
+      status,
+      bedrooms,
+      bathrooms,
+      area,
+      location,
+    } = createPropertyDto;
 
-    return this.prismaService.property.create({
-      data: createPropertyDto
-    })
-    // const { latitude, longitude, ...rest } = createPropertyDto;
+    // Geocode the location using OpenStreetMap Nominatim API
+    const geoResponse = await axios.get<GeoData>(
+      'https://nominatim.openstreetmap.org/search',
+      {
+        params: {
+          q: location,
+          format: 'json',
+          limit: 1,
+        },
+      },
+    );
 
-    // if (latitude === undefined || longitude === undefined) {
-    //   throw new BadRequestException('Latitude and Longitude are required');
-    // }
+    if (!geoResponse.data || geoResponse.data.length === 0) {
+      throw new BadRequestException('Invalid location provided');
+    }
 
-    // const result = await this.prismaService.$queryRawUnsafe<Array<any>>(
-    //   `INSERT INTO "properties" ("title", "description", "price", "status", "type", "userId", "latitude", "longitude", "location", "createdAt", "updatedAt")
-    // VALUES ($1, $2, $3, $4::"PropertyStatus", $5::"PropertyType", $6, $7, $8,  ST_SetSRID(ST_MakePoint($8, $7), 4326))
-    // RETURNING *`,
-    //   rest.title,
-    //   rest.description || '',
-    //   rest.price,
-    //   rest.status || 'AVAILABLE',
-    //   rest.type || 'HOUSE',
-    //   rest.userId,
-    //   latitude,
-    //   longitude,
-    //   //
-    // );
+    const lat = parseFloat(geoResponse.data[0].lat);
+    const lng = parseFloat(geoResponse.data[0].lon);
 
-    // return result;
+    if (isNaN(lat) || isNaN(lng)) {
+      throw new BadRequestException('Invalid geocoded coordinates');
+    }
+
+    // construct postgis point
+    const locationRaw = `SRID=4326;POINT(${lng} ${lat})`;
+
+    // use raw query to insert postgis geography
+    await this.prismaService.$executeRawUnsafe(
+      `INSERT INTO "properties"
+      (title, description, price, type, status, bedrooms, bathrooms, area, location, "userId", longitude, latitude)
+      VALUES($1, $2, $3, $4::"PropertyType", $5::"PropertyStatus", $6, $7, $8, ST_GeomFromEWKT($9), $10, $11, $12)`,
+      title,
+      description ?? null,
+      price,
+      type,
+      status || 'Available',
+      bedrooms ?? null,
+      bathrooms ?? null,
+      area ?? null,
+      locationRaw,
+      userId,
+      lng,
+      lat,
+    );
+
+    // Optionally return the property with latitude and longitude
+    return {
+      title,
+      description,
+      price,
+      type,
+      status: status || 'Available',
+      longitude: lng,
+      latitude: lat,
+      userId,
+    };
   }
 
   async findAll(
@@ -90,7 +141,7 @@ export class PropertyService {
     const take = limit;
     const skip = (page - 1) * take;
 
-    // if no lat/lng provided -> fallback to normal prisma query
+    // Non-geolocation query
     if (!lat || !lng || !radiusKm) {
       const where: any = {};
       if (search) {
@@ -125,7 +176,7 @@ export class PropertyService {
       };
     }
 
-    // with lat/;ng -> run PostGIS haversine query
+    // Geolocation query with postgis
     const properties = await this.prismaService.$queryRawUnsafe<any>(
       `SELECT p.*,
     ST_DistanceSphere(

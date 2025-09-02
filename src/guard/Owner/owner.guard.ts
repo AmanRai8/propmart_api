@@ -22,8 +22,7 @@ export class ownerGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user = request.payload?.user;
-    console.log(user);
-    if (user.role === 'OWNER' || user.role === 'ADMIN') {
+    if (user.role === 'Owner' || user.role === 'Admin') {
       return true;
     }
     throw new UnauthorizedException(

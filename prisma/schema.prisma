@@ -15,9 +15,11 @@ model User {
   userName   String
   email      String     @unique @db.VarChar(191)
   password   String     @db.VarChar(191)
+  avatar   String?     // stores the URL
+  avatarPublicId   String? // stores the cloudinfary public_id
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
-  role       Role       @default(CUSTOMER)
+  role       Role       @default(Customer)
   properties Property[]
 
   @@map("users")
@@ -29,16 +31,16 @@ model Property {
   description String?
   price       Float
   type        PropertyType
-  status      PropertyStatus  @default(AVAILABLE)
+  status      PropertyStatus  @default(Available)
   bedrooms    Int?
   bathrooms   Int?
   area        Float?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  location    Unsupported("geography(point, 4326)")? 
+  location    Unsupported("geography(point, 4326)")?
   userId      Int
-  latitude    Float
-  longitude   Float
+  longitude   Float?
+  latitude    Float?
   user        User            @relation(fields: [userId], references: [id])
   images      PropertyImage[]
 
@@ -57,19 +59,19 @@ model PropertyImage {
 }
 
 enum Role {
-  ADMIN
-  OWNER
-  CUSTOMER
+  Admin
+  Owner
+  Customer
 }
 
 enum PropertyType {
-  APARTMENT
-  HOUSE
-  LAND
+  Apartment
+  House
+  Land
 }
 
 enum PropertyStatus {
-  AVAILABLE
-  SOLD
-  RENTED
+  Available
+  Sold
+  Rent
 }

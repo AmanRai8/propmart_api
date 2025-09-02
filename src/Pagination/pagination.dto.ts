@@ -12,12 +12,12 @@ import { PropertyStatus, PropertyType } from 'generated/prisma';
 export class PaginationQueryDto {
   @IsOptional()
   @IsPositive()
-  @Type(() => Number)
+  @IsNumber()
   limit?: number;
 
   @IsOptional()
   @IsPositive()
-  @Type(() => Number)
+  @IsNumber()
   page?: number;
 
   @IsOptional()
@@ -25,24 +25,34 @@ export class PaginationQueryDto {
   search?: string;
 
   @IsOptional()
-  @IsEnum(PropertyType)
-  type?: PropertyType;
+  // @IsEnum(PropertyType)
+  @IsString()
+  type?: string;
 
   @IsOptional()
-  @IsEnum(PropertyStatus)
-  status?: PropertyStatus;
+  // @IsEnum(PropertyStatus)
+  @IsOptional()
+  status?: string;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @IsPositive()
-  @Type(() => Number)
   minPrice?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @IsPositive()
-  @Type(() => Number)
   maxPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  lat?: number;
+
+  @IsOptional()
+  @IsNumber()
+  lng?: number;
+
+  @IsOptional()
+  @IsNumber()
+  radiuskm?: number;
 }
